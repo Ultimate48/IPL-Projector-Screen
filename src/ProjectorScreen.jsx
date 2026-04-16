@@ -301,7 +301,7 @@ function PlayerSpotlight({ player }) {
   if (!player) {
     return (
       <div className="idle-screen">
-        <div className="idle-logo">IPL 2025</div>
+        <div className="idle-logo">IPL 2026</div>
         <div className="idle-label">AUCTION IN PROGRESS</div>
       </div>
     );
