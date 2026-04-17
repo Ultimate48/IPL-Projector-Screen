@@ -12,12 +12,30 @@ const ROLE = {
 
 const FLAG = { Indian: "🇮🇳", Foreigner: "🌏" };
 
+const DEFAULT_HEADSHOT = "https://documents.iplt20.com/ipl/assets/images/Default-Men.png";
+
 function StatBox({ val, label, color }) {
   return (
     <div className="stat-box">
       <div className="stat-val" style={{ color }}>{val ?? "—"}</div>
       <div className="stat-label">{label}</div>
     </div>
+  );
+}
+
+function PlayerHeadshot({ player }) {
+  const [imgError, setImgError] = useState(false);
+  const url = player?.headshotUrl;
+
+  useEffect(() => { setImgError(false); }, [player?.slug]);
+
+  return (
+    <img
+      src={(!url || imgError) ? DEFAULT_HEADSHOT : url}
+      alt={player.name}
+      onError={() => setImgError(true)}
+      className="h-120 w-120"
+    />
   );
 }
 
@@ -33,26 +51,32 @@ function PlayerSpotlight({ player }) {
 
   const r = ROLE[player.type] || ROLE.Batter;
   const s = player.stats || {};
-  const isBat = player.type === "Batter" || player.type === "WK" || player.type === "AllRounder";
+  const isBat  = player.type === "Batter" || player.type === "WK" || player.type === "AllRounder";
   const isBowl = player.type === "Bowler" || player.type === "AllRounder";
 
   return (
     <>
       <div className="spotlight-bg" />
-      <div style={{ position: "relative", zIndex: 1 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 4 }}>
-          <span className="player-flag">{FLAG[player.nationality]}</span>
-          <span className="player-role-badge" style={{ color: r.color, background: r.bg }}>
-            {r.label}
-          </span>
-        </div>
+      <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
 
-        <div className="player-name">{player.name}</div>
-        <div className="player-nat">{player.nationality}</div>
+        {/* Top row: info left, headshot right */}
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 8 }}>
+              <span className="player-flag">{FLAG[player.nationality]}</span>
+              <span className="player-role-badge" style={{ color: r.color, background: r.bg }}>
+                {r.label}
+              </span>
+            </div>
+            <div className="player-name">{player.name}</div>
+            <div className="player-nat">{player.nationality}</div>
+            <div className="base-price-row">
+              <span className="base-price-label">BASE PRICE</span>
+              <span className="base-price-val">{player.basePrice}</span>
+            </div>
+          </div>
 
-        <div className="base-price-row">
-          <span className="base-price-label">BASE PRICE</span>
-          <span className="base-price-val">{player.basePrice}</span>
+          <PlayerHeadshot player={player} />
         </div>
 
         <div className="spotlight-divider" />
@@ -60,13 +84,13 @@ function PlayerSpotlight({ player }) {
         <div className="stats-row">
           <StatBox val={s.matches} label="MATCHES" color="#94a3b8" />
           {isBat && <>
-            <StatBox val={s.runs}       label="RUNS"         color="#38bdf8" />
-            <StatBox val={s.batAvg}     label="BAT AVG"      color="#38bdf8" />
-            <StatBox val={s.strikeRate} label="STRIKE RATE"  color="#38bdf8" />
+            <StatBox val={s.runs}       label="RUNS"        color="#38bdf8" />
+            <StatBox val={s.batAvg}     label="BAT AVG"     color="#38bdf8" />
+            <StatBox val={s.strikeRate} label="STRIKE RATE" color="#38bdf8" />
           </>}
           {isBowl && <>
             <StatBox val={s.wickets}  label="WICKETS"  color="#4ade80" />
-            <StatBox val={s.bowlAvg} label="BOWL AVG" color="#4ade80" />
+            <StatBox val={s.bowlAvg}  label="BOWL AVG" color="#4ade80" />
             <StatBox val={s.economy}  label="ECONOMY"  color="#4ade80" />
           </>}
         </div>
@@ -80,8 +104,8 @@ export default function ProjectorScreen() {
   const [players, setPlayers]           = useState([]);
   const [currentSlug, setCurrentSlug]   = useState(null);
   const [flashTeam, setFlashTeam]       = useState(null);
-  const [soldReveal, setSoldReveal]     = useState(null); // { playerName, teamName, price }
-  const [unsoldReveal, setUnsoldReveal] = useState(null); // { playerName }
+  const [soldReveal, setSoldReveal]     = useState(null);
+  const [unsoldReveal, setUnsoldReveal] = useState(null);
   const prevPlayersRef                  = useRef([]);
   const lastLiveSlugRef                 = useRef(null);
   const revealedLiveSlugRef             = useRef(null);
@@ -91,15 +115,15 @@ export default function ProjectorScreen() {
       const data = snap.val() || {};
       setTeams(Object.entries(data).map(([id, t]) => ({ id, ...t })));
     });
+
     const unsubPlayers = onValue(ref(db, "players"), snap => {
       const data = snap.val() || {};
       const list = Object.entries(data).map(([slug, p]) => ({ slug, ...p }));
-      const previousPlayers = prevPlayersRef.current;
-      const liveSlug = lastLiveSlugRef.current;
+      const previousPlayers    = prevPlayersRef.current;
+      const liveSlug           = lastLiveSlugRef.current;
       const previousLivePlayer = liveSlug ? previousPlayers.find(p => p.slug === liveSlug) : null;
-      const nextLivePlayer = liveSlug ? list.find(p => p.slug === liveSlug) : null;
+      const nextLivePlayer     = liveSlug ? list.find(p => p.slug === liveSlug) : null;
 
-      // Detect a transition on the last live player and show the projector reveal once.
       if (
         liveSlug &&
         liveSlug !== revealedLiveSlugRef.current &&
@@ -122,6 +146,7 @@ export default function ProjectorScreen() {
       prevPlayersRef.current = list;
       setPlayers(list);
     });
+
     const unsubAuction = onValue(ref(db, "auction/currentPlayer"), snap => {
       const slug = snap.val() || null;
       if (slug) {
@@ -130,35 +155,29 @@ export default function ProjectorScreen() {
       }
       setCurrentSlug(slug);
     });
+
     return () => { unsubTeams(); unsubPlayers(); unsubAuction(); };
   }, []);
 
-  // Derived data
-  const currentPlayer = currentSlug ? players.find(p => p.slug === currentSlug) || null : null;
+  const currentPlayer  = currentSlug ? players.find(p => p.slug === currentSlug) || null : null;
 
   const teamsWithData = teams.map(team => {
-    const tp = players.filter(p => p.status === "sold" && p.soldTo === team.id);
+    const tp    = players.filter(p => p.status === "sold" && p.soldTo === team.id);
     const spent = tp.reduce((s, p) => s + (p.soldPrice || 0), 0);
     const counts = { Batter: 0, Bowler: 0, AllRounder: 0, WK: 0 };
     tp.forEach(p => { if (counts[p.type] !== undefined) counts[p.type]++; });
     return {
-      ...team,
-      spent,
-      budgetLeft: 100 - spent,
+      ...team, spent,
+      budgetLeft:  100 - spent,
       playerCount: tp.length,
-      foreign: tp.filter(p => p.nationality === "Foreigner").length,
+      foreign:     tp.filter(p => p.nationality === "Foreigner").length,
       counts,
     };
   }).sort((a, b) => b.playerCount - a.playerCount || a.budgetLeft - b.budgetLeft);
 
-  const soldPlayers = players
-    .filter(p => p.status === "sold")
-    .slice(-30); // last 30 for ticker
-
-  const totalSold = players.filter(p => p.status === "sold").length;
-  const totalAvail = players.filter(p => p.status === "unsold").length;
-
-  // Ticker animation duration based on count
+  const soldPlayers    = players.filter(p => p.status === "sold").slice(-30);
+  const totalSold      = players.filter(p => p.status === "sold").length;
+  const totalAvail     = players.filter(p => p.status === "unsold").length;
   const tickerDuration = Math.max(20, soldPlayers.length * 4);
 
   return (
@@ -220,7 +239,7 @@ export default function ProjectorScreen() {
             <div className="lb-scroll">
               {teamsWithData.map((team, i) => {
                 const budgetColor = team.budgetLeft < 20 ? "#ef4444" : team.budgetLeft < 50 ? "#fbbf24" : "#4ade80";
-                const isFlashing = flashTeam === team.id;
+                const isFlashing  = flashTeam === team.id;
                 return (
                   <div key={team.id} className={`lb-row ${isFlashing ? "flash" : ""}`}>
                     <div className={`lb-rank ${i < 3 ? "top" : ""}`}>{i + 1}</div>
@@ -231,7 +250,7 @@ export default function ProjectorScreen() {
                         {Object.entries(team.counts).map(([role, count]) => count > 0 && (
                           <span key={role} className="lb-pill"
                             style={{ color: ROLE[role].color, background: ROLE[role].bg }}>
-                            {ROLE[role].label.split("-")[0].slice(0,4)} {count}
+                            {ROLE[role].label.split("-")[0].slice(0, 4)} {count}
                           </span>
                         ))}
                       </div>
@@ -249,11 +268,7 @@ export default function ProjectorScreen() {
           <div className="ticker-label">SOLD</div>
           <div className="ticker-track">
             {soldPlayers.length > 0 ? (
-              <div
-                className="ticker-inner"
-                style={{ animationDuration: `${tickerDuration}s` }}
-              >
-                {/* Duplicate for seamless loop */}
+              <div className="ticker-inner" style={{ animationDuration: `${tickerDuration}s` }}>
                 {[...soldPlayers, ...soldPlayers].map((p, i) => {
                   const teamName = teams.find(t => t.id === p.soldTo)?.name || "—";
                   return (
