@@ -1,0 +1,274 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #060b14; --surface: #0d1829; --surface2: #111e33;
+    --border: rgba(255,255,255,0.07); --border-bright: rgba(255,255,255,0.15);
+    --orange: #f97316; --blue: #38bdf8; --green: #4ade80;
+    --red: #ef4444; --gold: #fbbf24; --purple: #c084fc;
+    --text: #e2e8f0; --muted: #64748b; --dimmer: #334155;
+  }
+  html, body, #root { height: 100%; margin: 0; }
+  body { background: var(--bg); overflow: hidden; }
+
+  .proj {
+    height: 100vh; width: 100vw;
+    background: var(--bg); color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ── */
+  .proj-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 60px; flex-shrink: 0;
+    background: rgba(6,11,20,0.95);
+    border-bottom: 1px solid var(--border);
+  }
+  .proj-logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px; font-weight: 900; letter-spacing: 3px;
+    background: linear-gradient(90deg, var(--orange), var(--gold));
+    background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .proj-live-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 16px; border-radius: 20px;
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+  }
+  .live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ef4444; box-shadow: 0 0 8px #ef4444;
+    animation: livePulse 1.5s infinite;
+  }
+  @keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 8px #ef4444;} 50%{opacity:.4;box-shadow:0 0 2px #ef4444;} }
+  .proj-live-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #ef4444;
+  }
+  .proj-header-stats { display: flex; gap: 28px; align-items: center; }
+  .proj-hstat { text-align: center; }
+  .proj-hstat-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 800; line-height: 1;
+  }
+  .proj-hstat-label { font-size: 9px; letter-spacing: 2px; color: var(--muted); font-weight: 600; }
+
+  /* ── MAIN BODY ── */
+  .proj-body {
+    flex: 1; display: flex; overflow: hidden;
+  }
+
+  /* ── LEFT — PLAYER SPOTLIGHT ── */
+  .spotlight {
+    flex: 1.1; display: flex; flex-direction: column; justify-content: center;
+    padding: 40px 44px; border-right: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+  .spotlight-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 20% 50%, rgba(249,115,22,0.06) 0%, transparent 70%);
+    transition: opacity 0.8s;
+  }
+
+  /* Idle state */
+  .idle-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; gap: 20px;
+  }
+  .idle-logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 80px; font-weight: 900; letter-spacing: 4px;
+    background: linear-gradient(90deg, var(--orange), var(--gold));
+    background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    opacity: 0.15;
+  }
+  .idle-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px; font-weight: 700; letter-spacing: 6px;
+    color: var(--dimmer);
+  }
+
+  /* Player card */
+  .player-flag { font-size: 52px; line-height: 1; margin-bottom: 16px; }
+  .player-role-badge {
+    display: inline-flex; align-items: center;
+    padding: 5px 16px; border-radius: 20px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700; letter-spacing: 3px;
+    margin-bottom: 16px;
+  }
+  .player-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(52px, 6vw, 82px);
+    font-weight: 900; letter-spacing: 1px; line-height: 1.05;
+    color: #fff;
+    animation: fadeSlideIn 0.5s ease;
+  }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .player-nat {
+    font-size: 15px; color: var(--muted); font-weight: 500;
+    margin-top: 8px; letter-spacing: 1px;
+  }
+  .base-price-row {
+    margin-top: 20px; display: flex; align-items: center; gap: 10px;
+  }
+  .base-price-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 3px; color: var(--muted);
+  }
+  .base-price-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px; font-weight: 900; color: var(--gold);
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: flex; gap: 14px; margin-top: 32px; flex-wrap: wrap;
+  }
+  .stat-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px 22px; text-align: center; min-width: 90px;
+    animation: fadeSlideIn 0.5s ease;
+  }
+  .stat-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 36px; font-weight: 900; line-height: 1;
+  }
+  .stat-label {
+    font-size: 10px; letter-spacing: 2px; color: var(--muted);
+    font-weight: 600; margin-top: 6px;
+  }
+
+  /* Divider line */
+  .spotlight-divider {
+    height: 1px; background: var(--border);
+    margin: 28px 0;
+  }
+
+  /* ── RIGHT — LEADERBOARD ── */
+  .leaderboard {
+    width: 380px; flex-shrink: 0;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .lb-header {
+    padding: 20px 24px 14px;
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .lb-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 3px; color: var(--muted);
+  }
+  .lb-scroll { flex: 1; overflow-y: auto; padding: 10px 12px; }
+
+  .lb-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 12px; border-radius: 10px;
+    border: 1px solid transparent;
+    margin-bottom: 4px; transition: all 0.3s;
+  }
+  .lb-row.flash {
+    border-color: rgba(251,191,36,0.5);
+    background: rgba(251,191,36,0.06);
+    animation: flashRow 1.5s ease forwards;
+  }
+  @keyframes flashRow {
+    0%  { border-color:rgba(251,191,36,0.6); background:rgba(251,191,36,0.1); }
+    100%{ border-color:transparent; background:transparent; }
+  }
+  .lb-rank {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 800; color: var(--dimmer);
+    width: 22px; text-align: center; flex-shrink: 0;
+  }
+  .lb-rank.top { color: var(--gold); }
+  .lb-info { flex: 1; min-width: 0; }
+  .lb-name {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .lb-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .lb-budget {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 17px; font-weight: 800; flex-shrink: 0;
+  }
+  .lb-role-pills { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+  .lb-pill {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9px; font-weight: 700; letter-spacing: 1px;
+    padding: 2px 6px; border-radius: 8px;
+  }
+
+  /* ── TICKER ── */
+  .ticker-bar {
+    height: 38px; flex-shrink: 0;
+    background: rgba(13,24,41,0.9);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; overflow: hidden;
+    position: relative;
+  }
+  .ticker-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    color: var(--orange); padding: 0 16px;
+    border-right: 1px solid var(--border);
+    flex-shrink: 0; white-space: nowrap;
+  }
+  .ticker-track {
+    flex: 1; overflow: hidden; position: relative;
+  }
+  .ticker-inner {
+    display: flex; align-items: center; gap: 0;
+    white-space: nowrap;
+    animation: tickerScroll linear infinite;
+  }
+  @keyframes tickerScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .ticker-item {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 600; letter-spacing: 1px;
+    padding: 0 32px; color: var(--text);
+    border-right: 1px solid var(--border);
+  }
+  .ticker-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--orange); flex-shrink: 0; }
+
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1e2a3a; border-radius: 2px; }
+
+  .reveal-overlay {
+    position: absolute; inset: 0; z-index: 50;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    animation: revealIn 0.5s ease;
+  }
+  @keyframes revealIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .reveal-sold {
+    background: radial-gradient(ellipse at center, rgba(74,222,128,0.15) 0%, rgba(6,11,20,0.97) 65%);
+  }
+  .reveal-unsold {
+    background: radial-gradient(ellipse at center, rgba(239,68,68,0.12) 0%, rgba(6,11,20,0.97) 65%);
+  }
+  .reveal-stamp {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(80px, 12vw, 130px);
+    font-weight: 900; letter-spacing: 8px; line-height: 1;
+    animation: stampIn 0.4s cubic-bezier(0.17,0.67,0.29,1.3);
+  }
+  @keyframes stampIn {
+    from { transform: scale(1.4); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .reveal-player { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(24px,3.5vw,44px); font-weight: 700; color: #fff; margin-top: 14px; letter-spacing: 1px; }
+  .reveal-team   { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(18px,2.5vw,32px); font-weight: 600; color: var(--blue); margin-top: 8px; letter-spacing: 2px; }
+  .reveal-price  { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(40px,6vw,72px); font-weight: 900; color: var(--gold); margin-top: 12px; letter-spacing: 2px; }
