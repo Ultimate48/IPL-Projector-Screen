@@ -163,7 +163,6 @@ export default function ProjectorScreen() {
 
   return (
     <>
-      <style>{css}</style>
       <div className="proj">
 
         {/* HEADER */}
