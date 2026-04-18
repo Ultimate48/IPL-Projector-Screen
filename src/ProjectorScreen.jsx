@@ -4,83 +4,77 @@ import { db } from "./firebase";
 import "./App.css";
 
 const ROLE = {
-  Batter:     { color: "#38bdf8", bg: "rgba(56,189,248,0.12)",  label: "BATSMAN" },
-  Bowler:     { color: "#4ade80", bg: "rgba(74,222,128,0.12)",  label: "BOWLER"  },
-  AllRounder: { color: "#fb923c", bg: "rgba(251,146,60,0.12)",  label: "ALL-ROUNDER" },
-  WK:         { color: "#c084fc", bg: "rgba(192,132,252,0.12)", label: "WICKET KEEPER" },
+  Batter:     { color: "#38bdf8", bg: "rgba(56,189,248,0.15)",  label: "BATSMAN" },
+  Bowler:     { color: "#4ade80", bg: "rgba(74,222,128,0.15)",  label: "BOWLER"  },
+  AllRounder: { color: "#fb923c", bg: "rgba(251,146,60,0.15)",  label: "ALL-ROUNDER" },
+  WK:         { color: "#c084fc", bg: "rgba(192,132,252,0.15)", label: "WICKET KEEPER" },
 };
 
+const RANK_CLASS = ["gold", "silver", "bronze"];
 const FLAG = { Indian: "🇮🇳", Foreigner: "🌏" };
 const DEFAULT_HEADSHOT = "https://documents.iplt20.com/ipl/assets/images/Default-Men.png";
 
+function useCountUp(target, duration = 1000) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    if (!target) return;
+    const start = performance.now();
+    const tick = (now) => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+      setVal(+(eased * target).toFixed(1));
+      if (t < 1) requestAnimationFrame(tick);
+      else setVal(target);
+    };
+    requestAnimationFrame(tick);
+  }, [target, duration]);
+  return val;
+}
+
+function PlayerHeadshot({ player }) {
+  const [err, setErr] = useState(false);
+  useEffect(() => setErr(false), [player?.slug]);
+  const src = (!player?.headshotUrl || err) ? DEFAULT_HEADSHOT : player.headshotUrl;
+  return <img key={player?.slug} src={src} alt={player?.name} onError={() => setErr(true)} />;
+}
+
 function StatBox({ val, label, color }) {
   return (
-    <div className="stat-box">
-      <div className="stat-val" style={{ color }}>{val ?? "—"}</div>
-      <div className="stat-label">{label}</div>
+    <div className="p2-stat" style={{ borderTopColor: color }}>
+      <div className="p2-stat-val" style={{ color }}>{val ?? "—"}</div>
+      <div className="p2-stat-label">{label}</div>
     </div>
   );
 }
 
-function PlayerHeadshot({ player }) {
-  const [imgError, setImgError] = useState(false);
-  const url = player?.headshotUrl;
-  useEffect(() => { setImgError(false); }, [player?.slug]);
-  return (
-    <img
-      src={(!url || imgError) ? DEFAULT_HEADSHOT : url}
-      alt={player.name}
-      onError={() => setImgError(true)}
-      className="h-120 w-120"
-    />
-  );
-}
-
 function PlayerSpotlight({ player }) {
-  if (!player) {
-    return (
-      <div className="idle-screen">
-        <div className="idle-logo">IPL 2026</div>
-        <div className="idle-label">AUCTION IN PROGRESS</div>
-      </div>
-    );
-  }
-
   const r     = ROLE[player.type] || ROLE.Batter;
   const s     = player.stats || {};
-  const isBat  = player.type === "Batter" || player.type === "WK" || player.type === "AllRounder";
-  const isBowl = player.type === "Bowler" || player.type === "AllRounder";
+  const isBat  = ["Batter", "WK", "AllRounder"].includes(player.type);
+  const isBowl = ["Bowler", "AllRounder"].includes(player.type);
 
   return (
-    <>
-      <div className="spotlight-bg" />
-      <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 8 }}>
-              <span className="player-flag">{FLAG[player.nationality]}</span>
-              <span className="player-role-badge" style={{ color: r.color, background: r.bg }}>
-                {r.label}
-              </span>
-            </div>
-            <div className="player-name">{player.name}</div>
-            <div className="player-nat">{player.nationality}</div>
-            <div className="base-price-row">
-              <span className="base-price-label">BASE PRICE</span>
-              <span className="base-price-val">{player.basePrice}</span>
-            </div>
-          </div>
-          <PlayerHeadshot player={player} />
+    <div className="spotlight" key={player.slug}>
+      <div className="spotlight-photo">
+        <div className="spotlight-photo-glow" />
+        <div className="spotlight-photo-fade" />
+        <PlayerHeadshot player={player} />
+      </div>
+      <div className="spotlight-info">
+        <div className="p2-flag">{FLAG[player.nationality]}</div>
+        <div className="p2-role-badge" style={{ color: r.color, background: r.bg }}>{r.label}</div>
+        <div className="p2-name">{player.name}</div>
+        <div className="p2-nat">{player.nationality}</div>
+        <div className="p2-base-row">
+          <span className="p2-base-label">BASE PRICE</span>
+          <span className="p2-base-val">{player.basePrice}</span>
         </div>
-
-        <div className="spotlight-divider" />
-
-        <div className="stats-row">
-          <StatBox val={s.matches} label="MATCHES" color="#94a3b8" />
+        <div className="p2-stats">
+          <StatBox val={s.matches}    label="MATCHES"      color="#94a3b8" />
           {isBat && <>
-            <StatBox val={s.runs}       label="RUNS"        color="#38bdf8" />
-            <StatBox val={s.batAvg}     label="BAT AVG"     color="#38bdf8" />
-            <StatBox val={s.strikeRate} label="STRIKE RATE" color="#38bdf8" />
+            <StatBox val={s.runs}       label="RUNS"         color="#38bdf8" />
+            <StatBox val={s.batAvg}     label="BAT AVG"      color="#38bdf8" />
+            <StatBox val={s.strikeRate} label="STRIKE RATE"  color="#38bdf8" />
           </>}
           {isBowl && <>
             <StatBox val={s.wickets} label="WICKETS"  color="#4ade80" />
@@ -89,26 +83,55 @@ function PlayerSpotlight({ player }) {
           </>}
         </div>
       </div>
-    </>
+      <div className="auction-strip" />
+    </div>
+  );
+}
+
+function IdleScreen() {
+  return (
+    <div className="idle-screen">
+      <div className="idle-glow-ring" />
+      <div className="idle-bat-icon">🏏</div>
+      <div className="idle-year">2026</div>
+      <div className="idle-title">IPL AUCTION</div>
+      <div className="idle-divider" />
+      <div className="idle-sub">
+        <span className="idle-sub-dot" />
+        AUCTION IN PROGRESS
+      </div>
+    </div>
+  );
+}
+
+function SoldReveal({ data, teams }) {
+  const animatedPrice = useCountUp(data?.price, 1000);
+  const teamName = teams.find(t => t.id === data?.soldTo)?.name || "—";
+  return (
+    <div className="reveal-overlay reveal-sold">
+      <div className="reveal-stamp" style={{ color: "#4ade80" }}>SOLD!</div>
+      <div className="reveal-player">{data?.playerName}</div>
+      <div className="reveal-team">→ {teamName}</div>
+      <div className="reveal-price">₹{animatedPrice} Cr</div>
+    </div>
   );
 }
 
 export default function ProjectorScreen() {
-  const [teams, setTeams]               = useState([]);
-  const [players, setPlayers]           = useState([]);
-  const [currentSlug, setCurrentSlug]   = useState(null);
-  const [soldReveal, setSoldReveal]     = useState(null); // { playerName, soldTo }
-  const [unsoldReveal, setUnsoldReveal] = useState(null); // { playerName }
-  const prevPlayersRef                  = useRef([]);
-  const lastLiveSlugRef                 = useRef(null);
-  const revealedLiveSlugRef             = useRef(null);
+  const [teams, setTeams]             = useState([]);
+  const [players, setPlayers]         = useState([]);
+  const [currentSlug, setCurrentSlug] = useState(null);
+  const [soldReveal, setSoldReveal]   = useState(null);
+  const [flashTeam, setFlashTeam]     = useState(null);
+  const prevPlayersRef      = useRef([]);
+  const lastLiveSlugRef     = useRef(null);
+  const revealedLiveSlugRef = useRef(null);
 
   useEffect(() => {
     const unsubTeams = onValue(ref(db, "teams"), snap => {
       const data = snap.val() || {};
       setTeams(Object.entries(data).map(([id, t]) => ({ id, ...t })));
     });
-
     const unsubPlayers = onValue(ref(db, "players"), snap => {
       const data = snap.val() || {};
       const list = Object.entries(data).map(([slug, p]) => ({ slug, ...p }));
@@ -116,52 +139,46 @@ export default function ProjectorScreen() {
       const liveSlug = lastLiveSlugRef.current;
       const prevLive = liveSlug ? prev.find(p => p.slug === liveSlug) : null;
       const nextLive = liveSlug ? list.find(p => p.slug === liveSlug) : null;
-
-      if (
-        liveSlug &&
-        liveSlug !== revealedLiveSlugRef.current &&
-        nextLive &&
-        prevLive?.status !== nextLive.status
-      ) {
-        if (nextLive.status === "sold") {
-          setSoldReveal({ playerName: nextLive.name, soldTo: nextLive.soldTo });
-          setTimeout(() => setSoldReveal(null), 5000);
-          revealedLiveSlugRef.current = liveSlug;
-        } else if (nextLive.status === "unsold_final") {
-          setUnsoldReveal({ playerName: nextLive.name });
-          setTimeout(() => setUnsoldReveal(null), 4000);
-          revealedLiveSlugRef.current = liveSlug;
-        }
+      if (liveSlug && liveSlug !== revealedLiveSlugRef.current && nextLive &&
+          prevLive?.status !== nextLive.status && nextLive.status === "sold") {
+        setFlashTeam(nextLive.soldTo);
+        setTimeout(() => setFlashTeam(null), 2500);
+        setSoldReveal({ playerName: nextLive.name, soldTo: nextLive.soldTo, price: nextLive.soldPrice });
+        setTimeout(() => setSoldReveal(null), 5500);
+        revealedLiveSlugRef.current = liveSlug;
       }
-
       prevPlayersRef.current = list;
       setPlayers(list);
     });
-
     const unsubAuction = onValue(ref(db, "auction/currentPlayer"), snap => {
       const slug = snap.val() || null;
-      if (slug) {
-        lastLiveSlugRef.current    = slug;
-        revealedLiveSlugRef.current = null;
-      }
+      if (slug) { lastLiveSlugRef.current = slug; revealedLiveSlugRef.current = null; }
       setCurrentSlug(slug);
     });
-
     return () => { unsubTeams(); unsubPlayers(); unsubAuction(); };
   }, []);
 
   const currentPlayer  = currentSlug ? players.find(p => p.slug === currentSlug) || null : null;
-  const soldPlayers    = players.filter(p => p.status === "sold").slice(-30);
+  const teamsWithData  = teams.map(team => {
+    const tp    = players.filter(p => p.status === "sold" && p.soldTo === team.id);
+    const spent = tp.reduce((s, p) => s + (p.soldPrice || 0), 0);
+    const counts = { Batter: 0, Bowler: 0, AllRounder: 0, WK: 0 };
+    tp.forEach(p => { if (counts[p.type] !== undefined) counts[p.type]++; });
+    const teamBudget = team.budget ?? 110;
+    return { ...team, budget: teamBudget, spent, budgetLeft: teamBudget - spent, playerCount: tp.length,
+             foreign: tp.filter(p => p.nationality === "Foreigner").length, counts };
+  });
+
+  const soldPlayers    = players.filter(p => p.status === "sold").slice(-40);
   const totalSold      = players.filter(p => p.status === "sold").length;
   const totalAvail     = players.filter(p => p.status === "unsold").length;
-  const tickerDuration = Math.max(20, soldPlayers.length * 4);
+  const tickerDuration = Math.max(24, soldPlayers.length * 4);
 
   return (
     <div className="proj">
-
-      {/* HEADER */}
       <header className="proj-header">
         <div className="proj-logo">🏏 IPL AUCTION</div>
+        <div className="proj-logo-divider" />
         <div className="proj-live-pill">
           <div className="live-dot" />
           <span className="proj-live-text">LIVE</span>
@@ -169,43 +186,25 @@ export default function ProjectorScreen() {
         <div className="proj-header-stats">
           <div className="proj-hstat">
             <div className="proj-hstat-val" style={{ color: "#4ade80" }}>{totalSold}</div>
-            <div className="proj-hstat-label">SOLD</div>
+            <div className="proj-hstat-label">Sold</div>
           </div>
           <div className="proj-hstat">
             <div className="proj-hstat-val" style={{ color: "#94a3b8" }}>{totalAvail}</div>
-            <div className="proj-hstat-label">AVAILABLE</div>
+            <div className="proj-hstat-label">Available</div>
           </div>
           <div className="proj-hstat">
             <div className="proj-hstat-val" style={{ color: "#fbbf24" }}>{teams.length}</div>
-            <div className="proj-hstat-label">TEAMS</div>
+            <div className="proj-hstat-label">Teams</div>
           </div>
         </div>
       </header>
 
-      {/* BODY — spotlight takes full width now */}
       <div className="proj-body">
-        <div className="spotlight" style={{ flex: 1, borderRight: "none" }}>
-          {soldReveal ? (
-            <div className="reveal-overlay reveal-sold">
-              <div className="reveal-stamp" style={{ color: "#4ade80" }}>SOLD!</div>
-              <div className="reveal-player">{soldReveal.playerName}</div>
-              <div className="reveal-team">
-                → {teams.find(t => t.id === soldReveal.soldTo)?.name || "—"}
-              </div>
-              {/* price intentionally removed */}
-            </div>
-          ) : unsoldReveal ? (
-            <div className="reveal-overlay reveal-unsold">
-              <div className="reveal-stamp" style={{ color: "#ef4444" }}>UNSOLD</div>
-              <div className="reveal-player">{unsoldReveal.playerName}</div>
-            </div>
-          ) : (
-            <PlayerSpotlight player={currentPlayer} />
-          )}
-        </div>
+        {soldReveal   && <SoldReveal data={soldReveal} teams={teamsWithData} />}
+        {!soldReveal && currentPlayer  && <PlayerSpotlight player={currentPlayer} />}
+        {!soldReveal && !currentPlayer && <IdleScreen />}
       </div>
 
-      {/* TICKER */}
       <div className="ticker-bar">
         <div className="ticker-label">SOLD</div>
         <div className="ticker-track">
@@ -218,22 +217,21 @@ export default function ProjectorScreen() {
                     <span className="ticker-dot" />
                     {FLAG[p.nationality]} {p.name}
                     <span style={{ color: "var(--muted)" }}>→</span>
-                    <span style={{ color: "#38bdf8" }}>{teamName}</span>
+                    <span style={{ color: "#38bdf8", fontWeight: 800 }}>{teamName}</span>
+                    <span style={{ color: "#fbbf24", fontWeight: 800 }}>₹{p.soldPrice}Cr</span>
+                    <span className="ticker-sep">|</span>
                   </span>
                 );
               })}
             </div>
           ) : (
-            <span style={{
-              fontFamily: "'Barlow Condensed',sans-serif", fontSize: 12,
-              color: "var(--dimmer)", letterSpacing: 2, paddingLeft: 20,
-            }}>
-              NO SALES YET — AUCTION STARTING SOON
+            <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13,
+              color:"var(--dimmer)", letterSpacing:3, paddingLeft:24, fontWeight:700 }}>
+              AUCTION STARTING SOON — STAY TUNED
             </span>
           )}
         </div>
       </div>
-
     </div>
   );
 }
