@@ -117,12 +117,22 @@ function SoldReveal({ data, teams }) {
   );
 }
 
+function UnsoldReveal({ data }) {
+  return (
+    <div className="reveal-overlay reveal-unsold">
+      <div className="reveal-stamp" style={{ color: "#ef4444" }}>UNSOLD</div>
+      <div className="reveal-player">{data?.playerName}</div>
+    </div>
+  );
+}
+
 export default function ProjectorScreen() {
   const [teams, setTeams]             = useState([]);
   const [players, setPlayers]         = useState([]);
   const [currentSlug, setCurrentSlug] = useState(null);
-  const [soldReveal, setSoldReveal]   = useState(null);
-  const [flashTeam, setFlashTeam]     = useState(null);
+  const [soldReveal, setSoldReveal]     = useState(null);
+  const [unsoldReveal, setUnsoldReveal] = useState(null);
+  const [flashTeam, setFlashTeam]       = useState(null);
   const prevPlayersRef      = useRef([]);
   const lastLiveSlugRef     = useRef(null);
   const revealedLiveSlugRef = useRef(null);
@@ -140,12 +150,18 @@ export default function ProjectorScreen() {
       const prevLive = liveSlug ? prev.find(p => p.slug === liveSlug) : null;
       const nextLive = liveSlug ? list.find(p => p.slug === liveSlug) : null;
       if (liveSlug && liveSlug !== revealedLiveSlugRef.current && nextLive &&
-          prevLive?.status !== nextLive.status && nextLive.status === "sold") {
-        setFlashTeam(nextLive.soldTo);
-        setTimeout(() => setFlashTeam(null), 2500);
-        setSoldReveal({ playerName: nextLive.name, soldTo: nextLive.soldTo, price: nextLive.soldPrice });
-        setTimeout(() => setSoldReveal(null), 5500);
-        revealedLiveSlugRef.current = liveSlug;
+          prevLive?.status !== nextLive.status) {
+        if (nextLive.status === "sold") {
+          setFlashTeam(nextLive.soldTo);
+          setTimeout(() => setFlashTeam(null), 2500);
+          setSoldReveal({ playerName: nextLive.name, soldTo: nextLive.soldTo, price: nextLive.soldPrice });
+          setTimeout(() => setSoldReveal(null), 5500);
+          revealedLiveSlugRef.current = liveSlug;
+        } else if (nextLive.status === "unsold_final") {
+          setUnsoldReveal({ playerName: nextLive.name });
+          setTimeout(() => setUnsoldReveal(null), 4000);
+          revealedLiveSlugRef.current = liveSlug;
+        }
       }
       prevPlayersRef.current = list;
       setPlayers(list);
@@ -200,9 +216,10 @@ export default function ProjectorScreen() {
       </header>
 
       <div className="proj-body">
-        {soldReveal   && <SoldReveal data={soldReveal} teams={teamsWithData} />}
-        {!soldReveal && currentPlayer  && <PlayerSpotlight player={currentPlayer} />}
-        {!soldReveal && !currentPlayer && <IdleScreen />}
+        {soldReveal    && <SoldReveal data={soldReveal} teams={teamsWithData} />}
+        {!soldReveal   && unsoldReveal  && <UnsoldReveal data={unsoldReveal} />}
+        {!soldReveal   && !unsoldReveal && currentPlayer  && <PlayerSpotlight player={currentPlayer} />}
+        {!soldReveal   && !unsoldReveal && !currentPlayer && <IdleScreen />}
       </div>
 
       <div className="ticker-bar">
