@@ -14,22 +14,6 @@ const RANK_CLASS = ["gold", "silver", "bronze"];
 const FLAG = { Indian: "🇮🇳", Foreigner: "🌏" };
 const DEFAULT_HEADSHOT = "https://documents.iplt20.com/ipl/assets/images/Default-Men.png";
 
-function useCountUp(target, duration = 1000) {
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    if (!target) return;
-    const start = performance.now();
-    const tick = (now) => {
-      const t = Math.min((now - start) / duration, 1);
-      const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-      setVal(+(eased * target).toFixed(1));
-      if (t < 1) requestAnimationFrame(tick);
-      else setVal(target);
-    };
-    requestAnimationFrame(tick);
-  }, [target, duration]);
-  return val;
-}
 
 function PlayerHeadshot({ player }) {
   const [err, setErr] = useState(false);
@@ -105,14 +89,12 @@ function IdleScreen() {
 }
 
 function SoldReveal({ data, teams }) {
-  const animatedPrice = useCountUp(data?.price, 1000);
   const teamName = teams.find(t => t.id === data?.soldTo)?.name || "—";
   return (
     <div className="reveal-overlay reveal-sold">
       <div className="reveal-stamp" style={{ color: "#4ade80" }}>SOLD!</div>
       <div className="reveal-player">{data?.playerName}</div>
       <div className="reveal-team">→ {teamName}</div>
-      <div className="reveal-price">₹{animatedPrice} Cr</div>
     </div>
   );
 }
@@ -144,7 +126,12 @@ export default function ProjectorScreen() {
     });
     const unsubPlayers = onValue(ref(db, "players"), snap => {
       const data = snap.val() || {};
-      const list = Object.entries(data).map(([slug, p]) => ({ slug, ...p }));
+      let list;
+      if (Array.isArray(data)) {
+        list = data.map((p, i) => p ? ({ ...p, slug: p.slug || String(i) }) : null).filter(Boolean);
+      } else {
+        list = Object.entries(data).map(([slug, p]) => ({ slug, ...p }));
+      }
       const prev     = prevPlayersRef.current;
       const liveSlug = lastLiveSlugRef.current;
       const prevLive = liveSlug ? prev.find(p => p.slug === liveSlug) : null;
@@ -235,7 +222,6 @@ export default function ProjectorScreen() {
                     {FLAG[p.nationality]} {p.name}
                     <span style={{ color: "var(--muted)" }}>→</span>
                     <span style={{ color: "#38bdf8", fontWeight: 800 }}>{teamName}</span>
-                    <span style={{ color: "#fbbf24", fontWeight: 800 }}>₹{p.soldPrice}Cr</span>
                     <span className="ticker-sep">|</span>
                   </span>
                 );
